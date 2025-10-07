@@ -3,8 +3,10 @@
 # and https://learnopencv.com/implementing-cnn-tensorflow-keras/
 
 import tensorflow as tf
+import numpy as np
 import matplotlib.pyplot as plt
-from tensorflow.keras import *
+from tensorflow.keras import * # import everything cos lazy
+from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.utils import to_categorical
 
 print("beep boop")
@@ -12,69 +14,79 @@ print("TensorFlow version:", tf.__version__)
 
 mnist = tf.keras.datasets.mnist
 
-(x_train, y_train), (x_test, y_test) = mnist.load_data()
-x_train, x_test = x_train / 255.0, x_test / 255.0
+# getting mnist data
+(training_inputs, training_labels), (test_inputs, test_labels) = mnist.load_data()
 
-print(f'x_train.shape = {x_train.shape}')
-print(f'x_test.shape = {x_test.shape}')
+## preprocessing
+# converting images to float 32 and adding fourth axis
+training_images= (training_inputs.astype('float32') / 255.0)[:,:,:,np.newaxis]
+test_images =  (test_inputs.astype('float32') / 255.0)[:,:,:,np.newaxis]
+# converting to 'one-hot' encoding
+categorical_training_labels  = to_categorical(training_labels)
+categorical_test_labels = to_categorical(test_labels)
+
+print(f'training_images.shape = {training_images.shape}')
+print(f'test_images.shape = {test_images.shape}')
 
 # plt.figure(figsize=(28,28))
 #
 # num_rows = 10
 # num_cols = 10
 
-# # plot first 100 images
+## plot first 100 images
 # for i in range(num_rows*num_cols):
 #     ax = plt.subplot(num_rows, num_cols, i + 1)
-#     plt.imshow(x_train[i,:,:], cmap='gray', vmin=0, vmax=1)
+#     plt.imshow(training_inputs[i,:,:], cmap='gray', vmin=0, vmax=1)
 #     plt.axis("off")
 #
 # plt.show()
 
-# # Change the labels from integer to categorical data.
-# print('Original (integer) label for the first training sample: ', y_train[0])
-# print('Original (integer) label for the first training sample: ', y_train[1])
-# print('Original (integer) label for the first training sample: ', y_train[2])
-#
-# # Convert labels to one-hot encoding.
-# y_train = to_categorical(y_train)
-# y_test = to_categorical(y_test)
-#
-# # this is horrible...
-# print('After conversion to categorical one-hot encoded labels: ', y_train[0])
-# print('After conversion to categorical one-hot encoded labels: ', y_train[1])
-# print('After conversion to categorical one-hot encoded labels: ', y_train[2])
+## this is horrible...
+# print('After conversion to categorical one-hot encoded labels: ', categorical_training_outputs[0])
+# print('After conversion to categorical one-hot encoded labels: ', categorical_training_outputs[1])
+# print('After conversion to categorical one-hot encoded labels: ', categorical_training_outputs[2])
 
 # adding training parameters
-epochs = 5
-batch_size = 128
-learning_rate = 0.001
+# values used need to be justified...
+EPOCHS = 30
+SPLIT = 0.2
+SHUFFLE = True
+BATCH_SIZE = 32
+LEARNING_RATE = 0.001
+OPTIMIZER = 'RMSprop'
 
-# create a model??
+# potentially need to initialise and set a random seed
+# it might do this anyways??
+
+input_shape = training_images.shape[1:]
+
+# create the model
 model = tf.keras.models.Sequential()
-model.add(Input(shape=(28, 28, 1)))
-model.add(layers.Conv2D(32, (3, 3), activation='relu'))
-model.add(layers.MaxPooling2D((2, 2)))
-model.add(layers.Conv2D(64, (3, 3), activation='relu'))
-model.add(layers.MaxPooling2D((2, 2)))
+model.add(Input(shape=input_shape))
+model.add(layers.Conv2D(32, 5, activation='relu', padding='same'))
+model.add(layers.MaxPooling2D(pool_size=(4, 4), strides=(4, 4)))
 
-model.summary()
+# just use one conv layer for now
+model.add(layers.Conv2D(128, 3, activation='relu', padding='same'))
+model.add(layers.AveragePooling2D(pool_size=(2, 2), strides=(2, 2)))
 
 # adding final layers to do classification
 model.add(layers.Flatten())
-model.add(layers.Dense(64, activation='relu'))
-model.add(layers.Dense(10))
+model.add(layers.Dense(256, activation='sigmoid'))
+model.add(layers.Dense(10, activation='softmax'))
 
 model.summary()
 
-model.compile(optimizer='adam',
-              loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+model.compile(optimizer=OPTIMIZER,
+              loss='categorical_crossentropy',
               metrics=['accuracy'])
 
-# model.fit(x_train, y_train, epochs=5)
+stop = EarlyStopping(monitor='val_loss', min_delta=0, patience=3,
+                     verbose=2, mode='auto',
+                     restore_best_weights=True)
 
-history = model.fit(x_train, y_train, epochs=5,
-                    validation_data=(x_test, y_test))
+history = model.fit(training_images, categorical_training_labels, epochs=EPOCHS, batch_size=BATCH_SIZE,
+                    shuffle=SHUFFLE, verbose=2,callbacks=[stop], validation_split=SPLIT)
 
 plt.plot(history.history['accuracy'], label='accuracy')
 plt.plot(history.history['val_accuracy'], label = 'val_accuracy')
@@ -84,8 +96,39 @@ plt.ylabel('Accuracy')
 plt.legend(loc='lower right')
 plt.show()
 
-test_loss, test_acc = model.evaluate(x_test,  y_test, verbose=2)
+test_loss, test_acc = model.evaluate(test_images,  categorical_test_labels, verbose=2)
 
 print(test_acc)
 
 ###################################################################
+
+# We can also test the performance of the network on the completely separate
+# testing set.  We get about 98% accuracy.  Note that this is testing on
+# unseen inputs, so is a true measure of performance.
+#
+
+
+print("Performance of network on testing set:")
+print("Accuracy on testing data: {:6.2f}%".format(test_acc*100))
+print("Test error (loss):        {:8.4f}".format(test_loss))
+
+
+# It is also interesting to see the accuracy reported on the training and
+# validation data.  The highest accuracy is always reported by the
+# training set, validation is worse, and typically better than the accuracy
+# reported by testing on the unseen testing set.  Here validation and testing
+# accuracies are about the same.
+#
+
+print("Performance of network:")
+print("Accuracy on training data:   {:6.2f}%".format(history.history['accuracy'][-1]*100))
+print("Accuracy on validation data: {:6.2f}%".format(history.history['val_accuracy'][-1]*100))
+print("Accuracy on testing data:    {:6.2f}%".format(test_acc*100))
+
+
+# Suggestions: Try increasing the number of convolutional layers and the
+# number of slices in the deeper convolutional layers (with maxpooling
+# between the layers for dimensionality reduction).  Consider adding
+# (judiciously) one or more Dropout layers.
+#
+plt.show()
