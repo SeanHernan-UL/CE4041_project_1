@@ -2,6 +2,9 @@
 # 22374698
 # 03/11/2025
 
+# the guides at https://www.tensorflow.org/tutorials/quickstart/beginner
+# and https://learnopencv.com/implementing-cnn-tensorflow-keras/ were used
+
 import tensorflow as tf
 # tf.debugging.set_log_device_placement(True)
 
@@ -15,6 +18,9 @@ from datetime import datetime
 import os
 import logging
 import sys
+
+# TODO this is good for testing, but will need to be cleaned up for submission of the mode
+# TODO test that the submission script runs in linux env, from terminal
 
 # create folder for test run
 test_time = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -83,7 +89,7 @@ csv_data = [[],[],[]]
 
 logger.info(f"Logger only grabbing max values per run (see .csv for full data)")
 # loop over 10 runs
-test_range = 3
+test_range = 100
 for run in range(1, test_range+1):
     logger.info(f"Run {run} -----------------------------")
     logger.info(f"Run, Train, Validation, Test")
