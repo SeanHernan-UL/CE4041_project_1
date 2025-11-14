@@ -3,8 +3,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
-# import the csv files form test run
+# print group + members names/ids
+print('## Group 1')
+members = [('Kanvar Murray', 22374698),('Seán Hernan', 22348948), ('Madeline Ware', 21306591)]
+for member in members:
+    print(f'{member[0]} : {member[1]}')
+print('')
 
+# import the csv files form test run
 training_df = pd.read_csv('mnist_test_20251103_232144/csv/mnist_training_20251103_232144.csv')
 validation_df = pd.read_csv('mnist_test_20251103_232144/csv/mnist_validation_20251103_232144.csv')
 test_df = pd.read_csv('mnist_test_20251103_232144/csv/mnist_test_20251103_232144.csv')

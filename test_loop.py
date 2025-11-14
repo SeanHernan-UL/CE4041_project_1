@@ -17,6 +17,13 @@ import os
 import logging
 import sys
 
+# print group + members names/ids
+print('## Group 1')
+members = [('Kanvar Murray', 22374698),('Seán Hernan', 22348948), ('Madeline Ware', 21306591)]
+for member in members:
+    print(f'{member[0]} : {member[1]}')
+print('')
+
 # create folder for test run
 test_time = datetime.now().strftime("%Y%m%d_%H%M%S")
 path = f"./mnist_training_{test_time}/"
