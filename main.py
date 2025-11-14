@@ -1,6 +1,3 @@
-# kanvar murray
-# 22374698
-# 03/11/2025
 
 # the guides at https://www.tensorflow.org/tutorials/quickstart/beginner
 # and https://learnopencv.com/implementing-cnn-tensorflow-keras/ were used
@@ -14,6 +11,13 @@ from tensorflow.keras.utils import to_categorical
 import seaborn as sns
 
 ## do one cycle of train/validate/test, print results + generate confusion matrix
+
+# print group + members names/ids
+print('## Group 1')
+members = [('Kanvar Murray', 22374698),('Seán Hernan', 22348948), ('Madeline Ware', 21306591)]
+for member in members:
+    print(f'{member[0]} : {member[1]}')
+print('')
 
 # load MNIST dataset
 mnist = tf.keras.datasets.mnist
@@ -36,17 +40,6 @@ VALIDATION_SPLIT = 0.2
 LEARNING_RATE = 0.001
 
 input_shape = train_images.shape[1:]
-
-# list to store accuracies of each run
-all_accuracies = []
-
-# initialize plots: train, validation
-plt.figure(1,figsize=(10,6))
-plt.figure(2,figsize=(10,6))
-
-# will be list of lists -> Dataframe -> csv file
-csv_labels = ["training", "validation", "test"]
-csv_data = [[],[],[]]
 
 # build CNN model
 model = models.Sequential([
